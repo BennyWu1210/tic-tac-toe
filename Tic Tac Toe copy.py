@@ -1,292 +1,200 @@
-# tic tac toe
 import pygame
 import random
 import sys
+from pygame import gfxdraw, Rect
+import time as t
+""" Sept 28: display fonts in different lines"""
 
 pygame.init()
 pygame.font.init()
-font = pygame.font.SysFont('calibri', 50, True)
-layout = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]  # 0 = unoccupied, 1 = circle, 2 = X
-width = 500
-height = 500
-screen = pygame.display.set_mode((width, height))
+font1 = pygame.font.SysFont('calibri', 40, True)
+mid_points = [[(150,150),(250,150),(350,150)],
+              [(150,250),(250,250),(350,250)],
+              [(150,350),(250,350),(350,350)]]
+grid = [[],[],[]]
 pygame.display.set_caption('TIC TAC TOE')
+#color
 black = (50, 50, 50)
 white = (255, 255, 255)
 backcolor = (102, 205, 0)
-grey = (143, 155, 155)
-Xscore = 0
-Oscore = 0
-center_pos = (250 + 1, 250 + 1)  # adjust the pos
-xando = 0
+grey = (142, 142, 142)
+antiquewhite = (250,235,215)
+size=500
+box_size = (100,100)
+screen = pygame.display.set_mode((size, size))
 
-status = [False, False]  # first False is for o, second false is for x
+class Background():
+    def __init__(self, color):
+        self.color = color
+        self.size = size
+        
+
+    def draw(self):
+        screen.fill(self.color)
+        
+    def display_grid(self):
+        pygame.draw.line(screen, black, (200,100), (200,400), 12)
+        pygame.draw.line(screen, black, (300,100), (300,400), 12)
+        pygame.draw.line(screen, black, (100,200), (400,200), 12)
+        pygame.draw.line(screen, black, (100,300), (400,300), 12)        
+        
+    
+
+class Player():
+    def __init__(self, name, score, ptype):
+        self.name = name
+        self.score = score
+        self.ptype = ptype # Make this as a boolean; if True X, else O.
+
+    
+    def display_score(self):
+        text = self.name + ":" + str(self.score)
+        return text
 
 
-def draw_grid(screen, black):
-    # draw the four lines
-    x = 200
-    y = 200
-    pygame.draw.line(screen, black, (x, y - 100), (x, y + 200), 10)
-    pygame.draw.line(screen, black, (x + 100, y - 100), (x + 100, y + 200), 10)
-    pygame.draw.line(screen, black, (x - 100, y), (x + 200, y), 10)
-    pygame.draw.line(screen, black, (x - 100, y + 100), (x + 200, y + 100), 10)
+class Box(Rect):
+    def __init__(self, center, size, position):
+        left = center[0]-size[0]/2
+        top = center[1]-size[1]/2
+        width = size[0]
+        height = size[1]
+        Rect.__init__(self, left, top, width, height)
+        self.status = 0 # 0-empty, 1: X, 2: O
+        self.position = position
 
+    def draw_symbol(self):
+        if self.status == 1:
+            draw_X(self.center)
+        elif self.status == 2:
+            draw_O(self.center)
+        
+     
+        
+def draw_X(center):
+    x = center[0]
+    y = center[1]
+    pygame.draw.line(screen, grey, (x,y), (x+30, y+30), 10)
+    pygame.draw.line(screen, grey, (x,y), (x-30, y-30), 10)
+    pygame.draw.line(screen, grey, (x,y), (x+30, y-30), 10)
+    pygame.draw.line(screen, grey, (x,y), (x-30, y+30), 10)
+                     
+
+def draw_O(center):
+    pygame.draw.circle(screen, grey, center, 35, 6)
+    gfxdraw.aacircle(screen, center[0], center[1], 35, grey)
+    
+
+def winDetection(ptype):
+    for lst in grid:
+        if lst[0].status ==  lst[1].status ==  lst[2].status == ptype:
+            return True
+    for col in range(3):
+        if grid[0][col].status == grid[1][col].status == grid[2][col].status == ptype:
+            return True
+    if grid[1][1].status == grid[2][2].status == grid[0][0].status == ptype:
+        return True
+    if grid[1][1].status == grid[0][2].status == grid[2][0].status == ptype:
+        return True
+
+    return False
+        
+
+def victory(ptype):
+    round_= False
+    print(str(ptype) + "WINS!")
+    
+    
+    
+    
+
+def display():
+    background.draw()
+    background.display_grid()
+    player_1.display_score()
+    player_2.display_score()
+    '''
+    grid[5].status = 1
+    grid[4].status = 2
+    '''
+    for i in grid:
+        for j in i:
+            j.draw_symbol()
+    # Display score
+    txt = ''
+    for obj in players:
+        txt += obj.display_score() + ' ' #Need to calculate a constant to balance the space out
+    scoreDis = font1.render(txt, True, black)
+    pos = (box_size[0])/2
+    screen.blit(scoreDis, (pos, 50))
+    '''
+    print(pos)
+    print(txt)
+    '''
+    
+
+
+player_1 = Player("B", 100, True)
+player_2 = Player("Yic", 100, False)
+players = [player_1, player_2]
+
+background = Background(antiquewhite)
+display()
+for i in range(len(mid_points)):
+    for j in range(len(mid_points[i])):
+        grid[i].append(Box(mid_points[i][j], box_size, (i,j)))
+
+
+pygame.display.update()
+
+playing = True # Runs while the program is running
+round_ = False # Runs everytime a new game starts
+
+while playing:
+    display()
+    
+    #print("BYEEE")
+    if round_:
+        for event in pygame.event.get():
+            #print("hi")
+            if event.type==pygame.QUIT: # There is a thing called "VIDEORESIZE"   
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mousepos = pygame.mouse.get_pos()
+                for lst in grid:
+                    for box in lst:
+                        if box.collidepoint(mousepos) and box.status == 0:
+                            if players[player_turn].ptype:
+                                box.status = 1
+                            elif not players[player_turn].ptype:
+                                box.status = 2
+                            if winDetection(player_turn+1):
+                                victory(player_turn+1) # do all the things inside this function
+                            print(winDetection(player_turn+1))
+                            moves += 1
+                            player_turn = moves % 2
+                            # box.draw_symbol()
+                            print(player_turn)
+                            
+                                
+    else:
+        moves = 0
+        player_turn = moves % 2
+        round_ = True
+        # resets everything(box status)
+        
+                    
+    
     pygame.display.update()
+    
 
+                        
 
-# testing
-# screen.fill(backcolor)
-# draw_grid(screen,black)
+""" Perhaps do some animation when the object get placed
+    Or when everytime a new round starts"""                
+        
+            
 
-def score_display(font, Xscore, Oscore):
-    pscore_display = font.render("X score: " + str(Xscore), True, black)
-    screen.blit(pscore_display, (20, 25))
-    escore_display = font.render("O score: " + str(Oscore), True, black)
-    screen.blit(escore_display, (275, 25))
-
-    pygame.display.update()
-
-
-def background():
-    screen.fill(backcolor)
-    draw_grid(screen, black)
-    score_display(font, Xscore, Oscore)
-
-
-def create_grid(width):
-    l = width
-    # center point of each block
-    center_point = [[(l * 3 / 10, l * 3 / 10), (l * 5 / 10, l * 3 / 10), (l * 7 / 10, l * 3 / 10)],
-                    [(l * 3 / 10, l * 5 / 10), (l * 5 / 10, l * 5 / 10), (l * 7 / 10, l * 5 / 10)],
-                    [(l * 3 / 10, l * 7 / 10), (l * 5 / 10, l * 7 / 10), (l * 7 / 10, l * 7 / 10)]]
-
-
-def draw_x(screen, width, white, center_pos):
-    pygame.draw.line(screen, white, (center_pos[0] + 30, center_pos[1] + 30), (center_pos[0] - 30, center_pos[1] - 30),
-                     12)
-    pygame.draw.line(screen, white, (center_pos[0] + 30, center_pos[1] - 30), (center_pos[0] - 30, center_pos[1] + 30),
-                     12)
-    pygame.display.update()
-
-
-def draw_o(screen, white, center_pos, width):
-    pygame.draw.circle(screen, white, center_pos, 35, 7)
-    pygame.display.update()
-
-
-def winDetection(layout, status):
-    for i in range(3):
-        if layout[0][i] == layout[1][i] == layout[2][i] and layout[0][i] != 0:  # vertical check
-            pygame.draw.line(screen, grey, (151 + i * 100, 70), (151 + i * 100, 430), 8)
-            if layout[0][i] == 1:
-                status[0] = True
-            elif layout[0][i] == 2:
-                status[1] = True
-            pygame.display.update()
-
-        if layout[i][0] == layout[i][1] == layout[i][2] and layout[i][0] != 0:  # Horizonal check
-            pygame.draw.line(screen, grey, (70, 151 + i * 100), (430, 151 + i * 100), 8)
-            if layout[i][0] == 1:
-                status[0] = True
-            elif layout[i][0] == 2:
-                status[1] = True
-            pygame.display.update()
-
-    if layout[0][0] == layout[1][1] == layout[2][2] and layout[0][0] != 0:
-        pygame.draw.line(screen, grey, (86, 86), (414, 414), 10)
-        if layout[1][1] == 1:
-            status[0] = True
-        elif layout[1][1] == 2:
-            status[1] = True
-        pygame.display.update()
-
-    if layout[2][0] == layout[1][1] == layout[0][2] and layout[2][0] != 0:
-        pygame.draw.line(screen, grey, (414, 86), (86, 414), 10)
-        if layout[1][1] == 1:
-            status[0] = True
-        elif layout[1][1] == 2:
-            status[1] = True
-        pygame.display.update()
-
-    return (status)
-
-
-masterloop = True
-firstloop = True
-
-while masterloop:
-
-    xando = 0
-    status = [False, False]  # first False is for o, second false is for x
-    layout = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]  # 0 = unoccupied, 1 = circle, 2 = X
-    background()
-    draw_grid(screen, black)
-    score_display(font, Xscore, Oscore)
-    create_grid(width)
-    firstloop = True
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
-
-        while firstloop:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    firstloop = False
-                    masterloop = False
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    print(pygame.mouse.get_pos())
-                    mousepos = pygame.mouse.get_pos()
-
-                    if (mousepos[0] > 110 and mousepos[0] < 190 and mousepos[1] > 110 and mousepos[1] < 190) and \
-                            layout[0][0] == 0:
-
-                        center_pos = (150, 150)
-                        if xando % 2 == 0:
-                            draw_x(screen, width, white, center_pos)
-                            layout[0][0] = 2
-                        else:
-                            draw_o(screen, white, center_pos, width)
-                            layout[0][0] = 1
-                        xando += 1
-
-                    if (mousepos[0] > 210 and mousepos[0] < 290 and mousepos[1] > 110 and mousepos[1] < 190) and \
-                            layout[0][1] == 0:
-                        center_pos = (250, 150)
-
-                        if xando % 2 == 0:
-                            draw_x(screen, width, white, center_pos)
-                            layout[0][1] = 2
-                        else:
-                            draw_o(screen, white, center_pos, width)
-                            layout[0][1] = 1
-                        xando += 1
-
-                    if (mousepos[0] > 310 and mousepos[0] < 390 and mousepos[1] > 110 and mousepos[1] < 190) and \
-                            layout[0][2] == 0:
-                        center_pos = (350, 150)
-
-                        if xando % 2 == 0:
-                            draw_x(screen, width, white, center_pos)
-                            layout[0][2] = 2
-                        else:
-                            draw_o(screen, white, center_pos, width)
-                            layout[0][2] = 1
-                        xando += 1
-
-                    if (mousepos[0] > 110 and mousepos[0] < 190 and mousepos[1] > 210 and mousepos[1] < 290) and \
-                            layout[1][0] == 0:
-                        center_pos = (150, 250)
-
-                        if xando % 2 == 0:
-                            draw_x(screen, width, white, center_pos)
-                            layout[1][0] = 2
-                        else:
-                            draw_o(screen, white, center_pos, width)
-                            layout[1][0] = 1
-                        xando += 1
-
-                    if (mousepos[0] > 210 and mousepos[0] < 290 and mousepos[1] > 210 and mousepos[1] < 290) and \
-                            layout[1][1] == 0:
-                        center_pos = (250, 250)
-
-                        if xando % 2 == 0:
-                            draw_x(screen, width, white, center_pos)
-                            layout[1][1] = 2
-                        else:
-                            draw_o(screen, white, center_pos, width)
-                            layout[1][1] = 1
-                        xando += 1
-
-                    if (mousepos[0] > 310 and mousepos[0] < 390 and mousepos[1] > 210 and mousepos[1] < 290) and \
-                            layout[1][2] == 0:
-                        center_pos = (350, 250)
-
-                        if xando % 2 == 0:
-                            draw_x(screen, width, white, center_pos)
-                            layout[1][2] = 2
-                        else:
-                            draw_o(screen, white, center_pos, width)
-                            layout[1][2] = 1
-                        xando += 1
-
-                    if (mousepos[0] > 110 and mousepos[0] < 190 and mousepos[1] > 310 and mousepos[1] < 390) and \
-                            layout[2][0] == 0:
-                        center_pos = (150, 350)
-
-                        if xando % 2 == 0:
-                            draw_x(screen, width, white, center_pos)
-                            layout[2][0] = 2
-                        else:
-                            draw_o(screen, white, center_pos, width)
-                            layout[2][0] = 1
-                        xando += 1
-
-                    if (mousepos[0] > 210 and mousepos[0] < 290 and mousepos[1] > 310 and mousepos[1] < 390) and \
-                            layout[2][1] == 0:
-                        center_pos = (250, 350)
-
-                        if xando % 2 == 0:
-                            draw_x(screen, width, white, center_pos)
-                            layout[2][1] = 2
-                        else:
-                            draw_o(screen, white, center_pos, width)
-                            layout[2][1] = 1
-                        xando += 1
-
-                    if (mousepos[0] > 310 and mousepos[0] < 390 and mousepos[1] > 310 and mousepos[1] < 390) and \
-                            layout[2][2] == 0:
-                        center_pos = (350, 350)
-                        if xando % 2 == 0:
-                            draw_x(screen, width, white, center_pos)
-                            layout[2][2] = 2
-                        else:
-                            draw_o(screen, white, center_pos, width)
-                            layout[2][2] = 1
-                        xando += 1
-            if (winDetection(layout, status)) == [True, False]:
-                print("owins")
-                Oscore += 1
-                screen.fill(black)
-                pygame.draw.circle(screen, white, (width - 30, width - 30), 35, 9)
-                O_win = font.render("O WINS: ", True, white)
-                screen.blit(O_win, (width - 30, width - 30))
-                pygame.display.update()
-                pygame.time.delay(1500)
-                pygame.display.update()
-                firstloop = False
-
-            elif (winDetection(layout, status)) == [False, True]:
-
-                print("xwins")
-                Xscore += 1
-
-                screen.fill(white)
-
-                pygame.draw.line(screen, black, (width / 2 - 30, width / 2 - 30), (width / 2 + 30, width / 2 + 30), 15)
-                pygame.draw.line(screen, black, (width / 2 + 30, width / 2 - 30), (width / 2 - 30, width / 2 + 30), 15)
-                X_win = font.render("X WINS: ", True, black)
-                screen.blit(X_win, (width - 30, width - 30))
-                pygame.display.update()
-                pygame.time.delay(1500)
-                pygame.display.update()
-                firstloop = False
-
-            elif xando == 9:
-
-                screen.fill(grey)
-                print("draw")
-                draw = font.render("DRAW: ", True, white)
-                screen.blit(draw, (width - 30, width - 30))
-                pygame.display.update()
-                pygame.time.delay(1500)
-                pygame.display.update()
-                firstloop = False
-pygame.quit()
-sys.exit()
-
-
-
-
+                        
+                
 
