@@ -4,8 +4,11 @@ import sys
 from pygame import gfxdraw, Rect
 import time as t
 import math
-""" Oct 5: Fix animations
-    add animations for X and O"""
+""" Oct 15: Added button class and it works now
+    Added background music
+    Added a stupid computer player
+    """
+
 
 pygame.init()
 pygame.font.init()
@@ -15,10 +18,12 @@ font_ = pygame.font.SysFont('calibri', int(font_size/2), True)
 font1 = pygame.font.SysFont('calibri', font_size, True)
 
 font2 = pygame.font.SysFont('calibri', int(font_size*1.3), True)
-font3 = pygame.font.SysFont('calibri', 60, True)
-font4 = pygame.font.SysFont('calibri', 80, True)
+font60 = pygame.font.SysFont('calibri', 60, True)
+font70 = pygame.font.SysFont('calibri', 70, True)
+font80 = pygame.font.SysFont('calibri', 80, True)
 mid_points = [[(150,150),(250,150),(350,150)],
               [(150,250),(250,250),(350,250)],
+
               [(150,350),(250,350),(350,350)]]
 grid = [[],[],[]]
 pygame.display.set_caption('TIC TAC TOE')
@@ -34,6 +39,7 @@ size=500
 box_size = (100,100)
 screen = pygame.display.set_mode((size, size))
 players = []
+songs = ["song1.mp3", "song2.mp3", "song3.mp3"]
 pi = math.pi
 
 class Background():
@@ -54,11 +60,11 @@ class Background():
     
 
 class Player():
-    def __init__(self, name, score, ptype):
+    def __init__(self, name, score, ptype, cpu=False):
         self.name = name
         self.score = score
         self.ptype = ptype # Make this as a boolean; if True X, else O.
-
+        self.cpu = cpu
     
     def display_score(self):
         text = self.name + ":" + str(self.score)
@@ -70,79 +76,111 @@ class Player():
 
         return text
 
+    def cpu_move_easy(self, grid): # The easy version
+        for rows in grid:
+            for box in rows:
+                pass
+                
+        
+        r1 = random.randint(0,2)
+        r2 = random.randint(0,2)
+        b = grid[r1][r2]
+        while b.status!=0:
+            r1 = random.randint(0,2)
+            r2 = random.randint(0,2)
+            b = grid[r1][r2]
+          
+        return (r1, r2)
+
+    def block_lastbox(self, grid, status):
+        for rows in grid:
+            for box in rows:
+                 
+                return index
+                    
+                    
+                    
+                    
+                
+                
+                
+        
+        
+        
+        
+    
+        
+
 
 class Box(Rect):
     def __init__(self, center, size, position=(-1, -1)):
-        left = center[0]-size[0]/2
-        top = center[1]-size[1]/2
-        width = size[0]
-        height = size[1]
+        left = center[0]-size[0]/2 + 5
+        top = center[1]-size[1]/2 + 5
+        width = size[0] - 10
+        height = size[1] - 10
         Rect.__init__(self, left, top, width, height)
         self.status = 0 # 0-empty, 1: X, 2: O
         self.position = position
-
+ 
     def show_symbol(self):
         if self.status == 1:
             draw_X(self.center)
         elif self.status == 2:
             draw_O(self.center)
 
-    def draw_symbol(self):   #Hmmmm I'm starting to wonder whether it is a good idea to put it in a function
+    def draw_symbol(self):
+        print("1")
         count = 0
+        count1 = 0
         x = self.center[0]
         y = self.center[1]
-        if self.status == 1: #X   
+        screenshot = pygame.Surface((200,60))
+        screenshot.blit(screen, (-289,-15,160,60))
+        pygame.image.save(screenshot, "turn.jpg")
+        turn = pygame.image.load("turn.jpg")
+        if self.status == 1:       #hh locate
             while True:
                 for event in pygame.event.get():
                     if event.type==pygame.QUIT:
                         pygame.quit()
                         sys.exit()
                 
-                if count<3:
-                    pygame.draw.line(screen, grey, (x-30,y-30), (x+(count+1)*10, y+(count+1)*10), 10)
-                    print("count" + str(count))
-                    #print((x+count*5, y+count*5))
-                elif count<6:
-                    pygame.draw.line(screen, grey, (x+30,y-30), (x-(count%3)*10, y+(count%3)*10), 10)
-                    print("count1" + str(count%3))
-                    print(count%3)
-                    #print((x-(count%6)*5, y+(count%6)*5))
-                    #print(count%6)
+                if count<=3:
+                    pygame.draw.line(screen, grey, (x-30,y-30), (x+(count)*10, y+(count)*10), 10)
+                if 5<count<=8:
+                    pygame.draw.line(screen, grey, (x+30,y-30), (x-(count%3+1)*10, y+(count%3+1)*10), 10) 
+                if count1 < 30:
+                    screen.blit(turn, (289,15))
+                    pygame.draw.rect(screen, background_color, ((size-8*(font_size*1.2/2), size*0.05-count1*2-10, 8*font_size/2, 6*font_size/4+5)))
                 else:
                     return
                 count += 1
+                count1 += 2
                 clock.tick(60)
                 pygame.display.update()
+                
                 
         elif self.status == 2: #O
             count = 0
             while True:
-                print("counttttt: "+str(count))
-                print(count*pi)
-                print("trueee" + str(count<=2.1))
                 for event in pygame.event.get():
                     if event.type==pygame.QUIT:
                         pygame.quit()
                         sys.exit()
                 if count<=2.1:
                     pygame.draw.arc(screen, grey, (x-35, y-35, 70, 70), 0, pi*count, 8)
-                    #print(pi*count)
+                if count1 < 30:  # Cannot update screen here so the animation disppears, how can I fix this? NVM I kinda fixed it but it took me 2 hours
+                    screen.blit(turn, (289,15))
+                    pygame.draw.rect(screen, background_color, ((size-8*(font_size*1.2/2), size*0.05-count1*2-10, 8*font_size/2, 6*font_size/4+5)))
                 else:
                     return
+                count += 0.2
+                count1 += 2
+                clock.tick(60)
                 pygame.display.update()
-                count += 0.1
-                
 
-    
-    
-            
-            
-            
-            
 
-    
-            
-            
+
 class InputBox:
     def __init__(self, x, y, w, h, player=0, text=''):
         self.rect = pygame.Rect(x, y, w, h)
@@ -176,14 +214,48 @@ class InputBox:
                 
     def draw(self):
         screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
-        pygame.draw.rect(screen, (100, 100, 100), self.rect, 8)
+        pygame.draw.rect(screen, (100, 100, 100), self.rect, 5)
 
     def update(self):
         # Resize the box if the text is too long.
         width = max(self.rect.w, self.txt_surface.get_width()+10)
         self.rect.w = width
+      
+
+class Button(Rect):
+    def __init__(self, color, center, width, height, text='', font=font60, side=True):
+        self.color = color
         
-                
+        self.width= width
+        self.height = height
+        self.x = center[0]-width/2
+        self.y = center[1]-height/2
+        Rect.__init__(self, self.x, self.y, width, height)
+        self.text = text
+        self.font = font
+        self.side = side
+
+        
+    def draw_button(self, color=black, wid=10):
+        
+        x = self.x
+        y = self.y
+        h = self.height
+        w = self.width
+        font = self.font
+        
+        pygame.draw.rect(screen, self.color, (x, y, w, h))
+        
+        if self.side:
+            pygame.draw.line(screen, color, (x-4, y), (x+w+5, y), wid)
+            pygame.draw.line(screen, color, (x-4, y+h), (x+w+5, y+h), wid)
+            pygame.draw.line(screen, color, (x, y), (x, y+h), wid)
+            pygame.draw.line(screen, color, (x+w, y), (x+w, y+h), wid)
+        
+        
+        start_words = font.render(self.text, True, white)
+        screen.blit(start_words, ((w-start_words.get_rect().width)/1.7+x, (h-start_words.get_rect().height)/1.7+y))      
+        
         
      
         
@@ -262,7 +334,7 @@ def display_turn(ptype=-1, won=False):
             turn_display = font2.render(text, True, black)
             screen.blit(turn_display, (size-len(text)*(font_size*1.2/2), size*0.05))
         elif ptype == 1:
-            ext = "O WINS!"
+            text = "O WINS!"
             turn_display = font2.render(text, True, black)
             screen.blit(turn_display, (size-len(text)*(font_size*1.2/2), size*0.05))
     
@@ -288,84 +360,91 @@ def reveal_screen():
 
 
 # MENU PAGE
-# variable name menu_color
 menu = True
-l = 0.32
-w = 0.4
-start_x = int(size*l)
-start_y = int(size*w)
+x = int(size/2)
+y = int(size/1.6)
+width = 200
+height = 100
+start_button = Button(grey, [x, y], width, height, "START")
+x = start_button.x
+y = start_button.y
 
-def start_button(l, w):
-    start_x = int(size*l)
-    start_y = int(size*w)
-    pygame.draw.rect(screen, (200, 200, 200), (start_x, start_y+50, size-start_x*2, size-start_y*2))
-    pygame.draw.line(screen, (100, 100, 100), (start_x,start_y+50), (start_x, size-start_y+50), 10)
-    pygame.draw.line(screen, (100, 100, 100), (start_x-4,start_y+50), (size-start_x+5, start_y+50), 10)
-    pygame.draw.line(screen, (100, 100, 100), (start_x-4,size-start_y+50), (size-start_x+5, size-start_y+50), 10)
-    pygame.draw.line(screen, (100, 100, 100), (size-start_x,start_y+50), (size-start_x, size-start_y+50), 10)
-    
-    
-
-start_box = Box((size/2-10, size/2+50), (size-start_x*2+10, size-start_y*2+50), (-1, -1))
-pygame.draw.rect(screen, (150, 150, 200), start_box)
-header = font3.render("Welcome to Benny's", True, white)
-header2 = font4.render("TIC TAC TOE", True, white)
-start_words = font3.render("START", True, white)
+header = font60.render("Welcome to Benny's", True, white)
+header2 = font80.render("TIC TAC TOE", True, white)
 X = font2.render("X", True, (90, 90, 80))
 Y = font2.render("Y", True, (90, 90, 80))
-press_reminder1 = font_.render("Don't forget to press return", True, (80, 100, 80))
-press_reminder2 = font_.render("after entering the names", True, (80, 100, 80))
 rgb_value = [80, 150, 170]
 top = [False, False, False]
 mouse_click = False
-text_input1 = Box((100, 400),(120, 50))
-text_input2 = Box((400, 400),(120, 50))
-
+mouse_on_start = False
+mouse_motion = False
 input1 = InputBox(40, 400, 130, 50, 1)
-input2 = InputBox(350, 400, 130, 50, 2)
+input2 = InputBox(335, 400, 130, 50, 2)
 input_boxes = [input1, input2]
+enlarged=False
 
-def menu_display():
+def menu_display(enlarged=False):
     menu_background = Background((rgb_value[0], rgb_value[1], rgb_value[2])) 
-    menu_background.draw()   
-    start_button(0.32, 0.4)
+    menu_background.draw()
+    start_button.draw_button()
     screen.blit(header, (20, 50))
     screen.blit(header2, (50, 120))
-    screen.blit(start_words, (start_x+15, size-start_y-15))
     screen.blit(X, (95, 360))
-    screen.blit(Y, (405, 360))
-    screen.blit(press_reminder1, (size/2-90, size-40))
-    screen.blit(press_reminder2, (size/2-80, size-20))
-    
-while menu: # locate
+    screen.blit(Y, (385, 360))
+'''
+menu_song = random.choice(songs)
+pygame.mixer.music.load(menu_song)
+pygame.mixer.music.play()
+'''
+while menu: # mm locate
     menu_display()
     for event in pygame.event.get():
+        mousepos = pygame.mouse.get_pos()
         if event.type == pygame.QUIT:   
             pygame.quit()
             sys.exit()
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_click = True
-            mousepos = pygame.mouse.get_pos()
+            
         for box in input_boxes:
             box.handle_event(event)
-                
+    
+    if start_button.collidepoint(mousepos):
+        start_button.x = x-10
+        start_button.y = y-10
+        start_button.width = width+20
+        start_button.height = height+20
+        start_button.font = font70
+        
+    else:
+        start_button.x = x
+        start_button.y = y
+        start_button.width = width
+        start_button.height = height
+        start_button.font = font60
+        
+        
+        
+
+
+        
     
     for box in input_boxes:
         box.update()
         box.draw()
-            
+        
     if mouse_click:
         mouse_click = False  # Perhaps create player object here instead
-        if start_box.collidepoint(mousepos):
-            p1 = Player(input_boxes[0].text, 0, True)
+        if start_button.collidepoint(mousepos):
+            p1 = Player(input_boxes[0].text, 0, True, True)
             players.append(p1)
-            p2 = Player(input_boxes[1].text, 1, False)
+            p2 = Player(input_boxes[1].text+"robot" , 0, False, True)
             players.append(p2)
             menu = False
     
 
     for rgb in range(len(rgb_value)):
-        if rgb_value[rgb] > 200:
+        if rgb_value[rgb] > 220:
             top[rgb] = True
         elif rgb_value[rgb] < 20:
             top[rgb] = False
@@ -403,32 +482,16 @@ count = 0
 count1 = 0
 display_turn(player_turn)
 n = 0
+t1 = -1
+'''
 
-
+playing_song = random.choice(songs)
+pygame.mixer.music.load(playing_song)
+pygame.mixer.music.play()
+'''
 while playing:
     display()
     display_turn(player_turn)
-    
-    if count < 60:
-        pygame.draw.rect(screen, background_color, ((size-8*(font_size*1.2/2), size*0.05-count*5, 8*font_size/2, 6*font_size/4)))
-        count += 1
-
-    
-        
-    '''
-    text = "I'm cool"
-    
-    print(count)
-    if count < 60:
-        scoreDis = font1.render(text, True, black)
-        screen.blit(scoreDis, (250, 0))
-        count += 1
-    
-    print(pygame.time.get_ticks())
-    '''
-
-    
-    
     for event in pygame.event.get():
         if event.type==pygame.QUIT: # There is a thing called "VIDEORESIZE"   
                 pygame.quit()
@@ -442,24 +505,47 @@ while playing:
             #do some display
             print("draw")
             round_ = False
-        elif mouse_click:
-            mouse_click = False
-            for lst in grid:
-                for box in lst:
-                    if box.collidepoint(mousepos) and box.status == 0:
-                        count = 0
-                        if players[player_turn].ptype:
-                            box.status = 1
-                        elif not players[player_turn].ptype:
-                            box.status = 2
-                        if winDetection(player_turn+1):
-                            victory(player_turn+1)
-                            display_turn(player_turn) 
-                        box.draw_symbol() # draws the symbols with animation
-                        print(winDetection(player_turn))
-                        moves += 1
-                        player_turn = (player_turn+1)%2
-                        print(player_turn)
+            
+        elif not players[player_turn].cpu:
+            if mouse_click:
+                mouse_click = False
+                for lst in grid:
+                    for box in lst:
+                        if box.collidepoint(mousepos) and box.status == 0:
+                            if players[player_turn].ptype:
+                                box.status = 1
+                            elif not players[player_turn].ptype:
+                                box.status = 2
+                            if winDetection(player_turn+1):
+                                victory(player_turn+1)
+                            
+                            moves += 1
+                            player_turn = (player_turn+1)%2
+                            box.draw_symbol() # draws the symbols with animation
+
+        else:
+            if t1 == -1:
+                t1 = pygame.time.get_ticks()
+                
+            if pygame.time.get_ticks()>300+t1:
+                t1 = -1
+                coords = players[player_turn].cpu_move_easy(grid)
+                box = grid[coords[0]][coords[1]]
+                if players[player_turn].ptype:
+                    box.status = 1
+                elif not players[player_turn].ptype:
+                    box.status = 2
+                if winDetection(player_turn+1):
+                    victory(player_turn+1)
+                moves += 1
+                player_turn = (player_turn+1)%2
+                box.draw_symbol() # draws the symbols with animation
+            
+                    
+                        
+                        
+                        
+                        
 
                                                                    
     else:
@@ -471,15 +557,15 @@ while playing:
                 reset()
         else:
             count1 = 0
+            count = 0
             round_ = True
-                   
-        # SWIPE TWICE first: slide down; clear everything; second: slide up
-        
+                
         # resets everything(box status)
         
     clock.tick(60)
     
     pygame.display.update()
+    
 
 
 
