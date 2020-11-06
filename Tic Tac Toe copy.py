@@ -54,6 +54,7 @@ lines_status_count = {0: [0,0], #[X, O]
                      }
 steps = []
 corner_list = [(0,0), (0,2), (2,0), (2,2)]
+edge_list = [(0,1), (1,0), (1,2), (2,1)]
 pygame.display.set_caption('TIC TAC TOE')
 #color
 black = (50, 50, 50)
@@ -105,21 +106,20 @@ class Player():
 
         return text
 
-    def cpu_move_easy(self, grid): # The easy version
-        coord = self.block_lastbox(grid)        
-            
-        if len(coord) == 0:
-            r1 = random.randint(0,2)
-            r2 = random.randint(0,2)
-            b = grid[r1][r2]
-            while b.status!=0:
-                r1 = random.randint(0,2)
-                r2 = random.randint(0,2)
-                b = grid[r1][r2]
-            return (r1, r2)
-                    
+    def cpu_move_easy(self, grid, move): # The easy version
+    
+        if move == 0:
+            random = random_move()
+            return random
+        else:
+            coord = self.block_lastbox(grid)
+            if len(coord) == 0:
+                random = random = random_move()
+                return random
         return coord
+        
             
+                        
         
     def cpu_move_testing(self):
         pass
@@ -153,27 +153,52 @@ class Player():
 
     def connect_blocks(self):
         if self.ptype:
-            type_num = 0
-        else:
             type_num = 1
+            enemy_num = 2
+        else:
+            type_num = 2
+            enemy_num = 1
         
         lst = []
 
-        if grid[1][1].status != 0 and grid[1][1].status != type_num+1:
+        if grid[1][1].status == enemy_num:
             random.shuffle(corner_list)
             for corners in corner_list:
                 if grid[corners[0]][corners[1]].status == 0:
                     return corners
-                        
-            
-        elif grid[1][1].status == 0 and grid[1][1].status != type_num+1:
-            
+        elif (grid[1][1].status == type_num
+        and grid[0][0].status == enemy_num
+        and grid[2][2].status == enemy_num):
+            random.shuffle(edge_list)
+            for box in edge_list:
+                if grid[box[0]][box[1]].status == 0:
+                    return (box[0], box[1])
+        elif (grid[1][1].status == type_num
+        and grid[0][2].status == enemy_num
+        and grid[2][0].status == enemy_num):
+            for box in edge_list:
+                if grid[box[0]][box[1]].status == 0:
+                    return (box[0], box[1])
+        elif grid[1][1].status == 0:
             return (1,1)
         
-        elif (grid[0][0].status!=type_num+1 and grid[0][0].status!=0) or (grid[2][2].status!=type_num+1 and grid[2][2].status!=0) or (grid[2][0].status!=type_num+1 and grid[2][0].status!=0) or (grid[0][2].status!=type_num+1 and grid[0][2].status!=0):
+        
+        if (grid[0][0].status == enemy_num   
+        or grid[2][2].status==enemy_num
+        or grid[2][0].status==enemy_num
+        or grid[0][2].status==enemy_num):
             if grid[1][1].status == 0:
                 return (1,1)
-        
+        if grid[1][1].status == type_num:
+            if (grid[0][0].status==enemy_num
+            or grid[2][2].status==enemy_num
+            or grid[2][0].status==enemy_num
+            or grid[0][2].status==enemy_num):
+                random.shuffle(corner_list)
+                for corners in corner_list:
+                    if grid[corners[0]][corners[1]].status == 0:
+                        return corners
+                    
         return lst
             
         
@@ -229,8 +254,7 @@ class Box(Rect):
                 count1 += 2
                 clock.tick(60)
                 pygame.display.update()
-                
-                
+        
         elif self.status == 2: #O
             count = 0
             while True:
@@ -325,7 +349,17 @@ class Button(Rect):
         start_words = text_size.render(self.text, True, white)
         screen.blit(start_words, ((w-start_words.get_rect().width)/1.62+x , (h-start_words.get_rect().height)/1.62+y))      
         
-        
+
+
+def random_move():
+    r1 = random.randint(0,2)
+    r2 = random.randint(0,2)
+    b = grid[r1][r2]
+    while b.status!=0:
+        r1 = random.randint(0,2)
+        r2 = random.randint(0,2)
+        b = grid[r1][r2]
+    return (r1, r2)
         
 def draw_X(center):
     x = center[0]
@@ -493,7 +527,7 @@ pygame.mixer.music.load(menu_song)
 pygame.mixer.music.play()
 
 while menu: # mm locate
-    pygame.mixer.music.set_volume(0.05)
+    pygame.mixer.music.set_volume(0.03)
     menu_display()
     for event in pygame.event.get():
         mousepos = pygame.mouse.get_pos()
@@ -543,13 +577,13 @@ while menu: # mm locate
     if mouse_click:
         mouse_click = False  # Perhaps create player object here instead
         if start_button.collidepoint(mousepos):
-            pygame.mixer.music.set_volume(0.05)
+            pygame.mixer.music.set_volume(0.03)
             pygame.mixer.music.load("button1.mp3")# cannot open this file with mixer sound
             pygame.mixer.music.play()
             t.sleep(1)
-            p1 = Player(input_boxes[0].text+"Benny", 0, True, True)
+            p1 = Player(input_boxes[0].text+"Benny", 0, True, False)
             players.append(p1)
-            p2 = Player(input_boxes[1].text+"robot" , 0, False, True)
+            p2 = Player(input_boxes[1].text+"robot" , 0, False, False)
             players.append(p2)
             menu = False
     
@@ -595,7 +629,7 @@ display_turn(player_turn)
 n = 0
 t1 = -1
 
-pygame.mixer.music.set_volume(0.05)
+pygame.mixer.music.set_volume(0.03)
 playing_song = random.choice(songs)
 pygame.mixer.music.load(playing_song)
 pygame.mixer.music.play()
@@ -611,7 +645,7 @@ while playing:
                 mousepos = pygame.mouse.get_pos()
                 mouse_click = True
                 
-    if round_:
+    if round_: # Player
         
         if moves == 9:
             #do some display
@@ -637,15 +671,15 @@ while playing:
                             box.draw_symbol() # draws the symbols with animation
                             
 
-        else:
+        else: #CPU
             if t1 == -1:
                 t1 = pygame.time.get_ticks()
                 
             if pygame.time.get_ticks()>300+t1:
                 t1 = -1
-                coords = players[player_turn].cpu_move_easy(grid)
+                coords = players[player_turn].cpu_move_easy(grid, moves)
                 box = grid[coords[0]][coords[1]]
-                steps.append(box.center)
+                steps.append(box.position)
                 if players[player_turn].ptype:
                     box.status = 1
                 elif not players[player_turn].ptype:
